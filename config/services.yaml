@@ -21,4 +21,6 @@ services:
             - '../src/Kernel.php'
 
     Symfony\Component\Serializer\SerializerInterface:
-        class: \App\Infrastructure\Controller\ObjectSerializer
+        class: \App\Infrastructure\ObjectSerializer
+    Symfony\Component\Serializer\Normalizer\DenormalizerInterface:
+        class: \App\Infrastructure\ObjectSerializer

@@ -6,6 +6,7 @@ use App\Application\CheckQuiz\CheckQuizHandler;
 use App\Application\CheckQuiz\UserQuizDto;
 use App\Application\GetQuiz\GetQuizHandler;
 use App\Infrastructure\Controller\ResponseDto\Quiz;
+use App\Infrastructure\Repository\ResultsRepository;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpKernel\Attribute\AsController;
@@ -29,7 +30,8 @@ class ApiController
     public function answerQuiz(
         Request $request,
         SerializerInterface $serializer,
-        CheckQuizHandler $handler
+        CheckQuizHandler $handler,
+        ResultsRepository $resultsRepository,
     ): JsonResponse {
         $userQuizDto = $serializer->deserialize(
             $request->getContent(),
@@ -38,6 +40,8 @@ class ApiController
         );
 
         $result = ($handler)($userQuizDto);
+
+        $resultsRepository->save($result);
 
         return new JsonResponse($result);
     }

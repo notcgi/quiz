@@ -2,6 +2,8 @@
 
 namespace App\Application\GetQuiz;
 
+use App\Domain\Question as QuestionDomain;
+use App\Domain\Quiz;
 use App\Infrastructure\Repository\QuizRepository;
 
 class GetQuizHandler
@@ -16,4 +18,5 @@ class GetQuizHandler
     {
         return $this->quizRepository->get();
     }
+
 }

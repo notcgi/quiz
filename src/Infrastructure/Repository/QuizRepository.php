@@ -10,31 +10,55 @@ use \App\Domain\Question as QuestionDomain;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\Query\Parameter;
+use Symfony\Component\Serializer\Normalizer\DenormalizerInterface;
+use Symfony\Component\Serializer\SerializerInterface;
 
 class QuizRepository
 {
     public function __construct(
         private readonly EntityManagerInterface $entityManager,
+        private readonly DenormalizerInterface $serializer,
     )
     {
     }
 
     public function get(): Quiz
     {
-        $qb = $this->entityManager
-            ->createQueryBuilder();
-        //todo answers > 1?
-        $query = $qb
-            ->select('q, a')
-            ->from(Question::class, 'q')
-            ->join('q.answers', 'a')
-            ->setMaxResults(10)
-            ->getQuery();
+        $conn = $this->entityManager->getConnection();
 
-        /** @var Question[] $result */
-        $result = $query->getResult();
+        $sql = '
+            SELECT q.*, a.*, q_rand
+            FROM (
+                SELECT *, random() AS q_rand
+                FROM question
+                ORDER BY q_rand
+                LIMIT 10
+            ) q
+            INNER JOIN answer a ON q.id = a.question_id
+            ORDER BY q_rand, random()
+        ';
 
-        return $this->mapToDomain($result);
+        $stmt = $conn->prepare($sql);
+        $result = $stmt->executeQuery()->fetchAllAssociative();
+
+        $questions = [];
+        foreach ($result as $row) {
+            $questionId = $row['question_id'];
+            if (!isset($questions[$questionId])) {
+                $questions[$questionId] = [
+                    'id' => $questionId,
+                    'question_text' => $row['question_text'],
+                    'answers' => []
+                ];
+            }
+            $questions[$questionId]['answers'][] = [
+                'id' => $row['id'],
+                'answer_text' => $row['answer_text'],
+                'is_correct' => $row['is_correct']
+            ];
+        }
+
+        return $this->serializer->denormalize(compact('questions'), Quiz::class);
     }
 
     /**
@@ -51,7 +75,6 @@ class QuizRepository
             ->from(Question::class, 'q')
             ->join('q.answers', 'a')
             ->where($qb->expr()->in('q.id', ':ids'))
-            ->setMaxResults(10)
             ->setParameters(new ArrayCollection([
                 new Parameter('ids', $ids)
             ]))

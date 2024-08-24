@@ -2,10 +2,23 @@ services:
   php:
     build:
       dockerfile: docker/php/Dockerfile
+    depends_on:
+      - postgres
+      - php-migration
     volumes:
       - ./:/app
     networks:
       - default
+
+  php-migration:
+    build:
+      dockerfile: docker/php/Dockerfile
+    entrypoint: bin/console doctrine:migrations:migrate --no-interaction
+    depends_on:
+      - postgres
+    networks:
+      - default
+
   nginx:
     image: nginx:1.27
     volumes:
@@ -15,6 +28,7 @@ services:
       - "80:80"
     networks:
       - default
+
   postgres:
     image: postgres:16.4
     environment:

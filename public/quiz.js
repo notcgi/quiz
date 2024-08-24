@@ -1,48 +1,60 @@
 document.addEventListener('DOMContentLoaded', function() {
-    fetch('/api/v1/quiz')
-        .then(response => {
-            if (!response.ok) {
-                throw new Error('Network response was not ok');
-            }
-            return response.json();
-        })
-        .then(data => {
-            if (!Array.isArray(data.questions)) {
-                throw new TypeError('Expected an array of questions');
-            }
-            const quizContainer = document.getElementById('quiz');
-            data.questions.forEach(question => {
-                const questionElement = document.createElement('div');
-                questionElement.innerHTML = `<h2>${question.questionText}</h2>`;
-                const answersList = document.createElement('div');
-                question.answers.forEach(answer => {
-                    const answerItem = document.createElement('p');
-                    answerItem.innerHTML = `
-                        <label>
-                            <input type="checkbox" name="question_${question.id}" value="${answer.id}">
-                            ${answer.answerText}
-                        </label>
-                    `;
-                    answersList.appendChild(answerItem);
+    let questionsData = [];
+
+    // Hide the results sections initially
+    document.getElementById('results').style.display = 'none';
+
+    function loadQuizData() {
+        fetch('/api/v1/quiz/')
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (!Array.isArray(data.questions)) {
+                    throw new TypeError('Expected an array of questions');
+                }
+                questionsData = data.questions;
+                const quizContainer = document.getElementById('quiz');
+                quizContainer.innerHTML = ''; // Clear previous quiz data
+                data.questions.forEach(question => {
+                    const questionElement = document.createElement('div');
+                    questionElement.innerHTML = `<h2>${question.questionText}</h2>`;
+                    const answersList = document.createElement('div');
+                    question.answers.forEach(answer => {
+                        const answerItem = document.createElement('p');
+                        answerItem.innerHTML = `
+                            <label>
+                                <input type="checkbox" name="question_${question.id}" value="${answer.id}">
+                                ${answer.answerText}
+                            </label>
+                        `;
+                        answersList.appendChild(answerItem);
+                    });
+                    questionElement.appendChild(answersList);
+                    quizContainer.appendChild(questionElement);
                 });
-                questionElement.appendChild(answersList);
-                quizContainer.appendChild(questionElement);
+            })
+            .catch(error => {
+                console.error('Error fetching quiz data:', error);
             });
-        })
-        .catch(error => {
-            console.error('Error fetching quiz data:', error);
-        });
+    }
+
+    loadQuizData();
 
     document.getElementById('quiz-form').addEventListener('submit', function(event) {
         event.preventDefault();
         const formData = new FormData(event.target);
         const results = {};
 
+        questionsData.forEach(question => {
+            results[question.id] = [];
+        });
+
         formData.forEach((value, key) => {
             const questionId = key.split('_')[1];
-            if (!results[questionId]) {
-                results[questionId] = [];
-            }
             results[questionId].push({ id: parseInt(value) });
         });
 
@@ -53,7 +65,7 @@ document.addEventListener('DOMContentLoaded', function() {
             }))
         };
 
-        fetch('/api/v1/quiz', {
+        fetch('/api/v1/quiz/', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
@@ -67,10 +79,55 @@ document.addEventListener('DOMContentLoaded', function() {
                 return response.json();
             })
             .then(data => {
-                console.log('Quiz results submitted successfully:', data);
+                const correctQuestions = [];
+                const incorrectQuestions = [];
+
+                data.questions.forEach(question => {
+                    const questionText = questionsData.find(q => q.id === question.id).questionText;
+                    if (question.isCorrect) {
+                        correctQuestions.push(questionText);
+                    } else {
+                        incorrectQuestions.push(questionText);
+                    }
+                });
+
+                const correctList = document.getElementById('correct-questions');
+                const incorrectList = document.getElementById('incorrect-questions');
+
+                correctList.innerHTML = '';
+                incorrectList.innerHTML = '';
+
+                correctQuestions.forEach(text => {
+                    const listItem = document.createElement('li');
+                    listItem.textContent = text;
+                    correctList.appendChild(listItem);
+                });
+
+                incorrectQuestions.forEach(text => {
+                    const listItem = document.createElement('li');
+                    listItem.textContent = text;
+                    incorrectList.appendChild(listItem);
+                });
+
+                // Show the results sections and hide the form
+                document.getElementById('results').style.display = 'block';
+                document.getElementById('quiz-form').style.display = 'none';
             })
             .catch(error => {
                 console.error('Error submitting quiz results:', error);
             });
+    });
+
+    // Add event listener for the reset button
+    document.getElementById('reset-button').addEventListener('click', function() {
+        // Hide the results section and show the form
+        document.getElementById('results').style.display = 'none';
+        document.getElementById('quiz-form').style.display = 'block';
+
+        // Clear previous answers
+        document.getElementById('quiz-form').reset();
+
+        // Reload quiz data
+        loadQuizData();
     });
 });

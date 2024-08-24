@@ -12,9 +12,9 @@ class Quiz
         \App\Domain\Quiz $quiz
     )
     {
-        $this->questions = array_map(
+        $this->questions = array_values(array_map(
             static fn(\App\Domain\Question $question) =>  new Question($question),
             $quiz->questions
-        );
+        ));
     }
 }

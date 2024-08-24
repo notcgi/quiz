@@ -25,7 +25,7 @@ class CheckQuizHandler
         $results = [];
 
         foreach ($userQuizDto->questions as $userQuestion) {
-            $correctAnswerIds = $correctAnswers[$userQuestion->id] ?? [];
+            $correctAnswerIds = $correctAnswers[$userQuestion->id];
             $isCorrect = $this->isCorrect($userQuestion, $correctAnswerIds);
 
             $results[] = new QuestionResultDto($userQuestion->id, $isCorrect);
@@ -39,19 +39,16 @@ class CheckQuizHandler
         $userAnswers = array_map(
             static fn($answer) => $answer->id,
             $userQuestion->answers);
-        $intersection = array_intersect($userAnswers, $correctAnswerIds);
 
-        // there are not only correct answers
-        if (count($intersection) < count($userAnswers)) {
-            return false;
-        }
         // user did not answer
-        if (count($intersection) > 0 && count($userAnswers) === 0)
+        if (count($correctAnswerIds) > 0 && count($userAnswers) === 0)
         {
             return false;
         }
 
-        return true;
+        $intersection = array_intersect($userAnswers, $correctAnswerIds);
+
+        return count($intersection) >= count($userAnswers);
     }
 
     private function getQuestionIds(UserQuizDto $userQuizDto)
