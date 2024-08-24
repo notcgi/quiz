@@ -8,7 +8,6 @@ class Answer
         public readonly int $id,
         public readonly string $answerText,
         public readonly bool $isCorrect,
-    )
-    {
+    ) {
     }
 }

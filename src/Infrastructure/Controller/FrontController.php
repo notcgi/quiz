@@ -11,7 +11,8 @@ use Symfony\Component\Routing\Attribute\Route;
 class FrontController extends AbstractController
 {
     #[Route('/', methods: 'GET')]
-    public function index(): Response {
+    public function index(): Response
+    {
         return $this->render('quiz.html.twig');
     }
 

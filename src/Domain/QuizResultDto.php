@@ -9,5 +9,6 @@ class QuizResultDto
      */
     public function __construct(
         public readonly array $questions
-    ) {}
+    ) {
+    }
 }

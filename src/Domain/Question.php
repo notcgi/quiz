@@ -11,7 +11,6 @@ class Question
         public readonly int $id,
         public readonly string $questionText,
         public readonly array $answers,
-    )
-    {
+    ) {
     }
 }

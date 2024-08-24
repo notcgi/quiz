@@ -9,7 +9,6 @@ class Quiz
      */
     public function __construct(
         public readonly array $questions,
-    )
-    {
+    ) {
     }
 }

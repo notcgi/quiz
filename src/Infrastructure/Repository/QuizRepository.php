@@ -2,24 +2,22 @@
 
 namespace App\Infrastructure\Repository;
 
+use App\Domain\Answer as AnswerDomain;
+use App\Domain\Question as QuestionDomain;
 use App\Domain\Quiz;
 use App\Infrastructure\Entity\Answer;
-use \App\Domain\Answer as AnswerDomain;
 use App\Infrastructure\Entity\Question;
-use \App\Domain\Question as QuestionDomain;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\Query\Parameter;
 use Symfony\Component\Serializer\Normalizer\DenormalizerInterface;
-use Symfony\Component\Serializer\SerializerInterface;
 
 class QuizRepository
 {
     public function __construct(
         private readonly EntityManagerInterface $entityManager,
         private readonly DenormalizerInterface $serializer,
-    )
-    {
+    ) {
     }
 
     public function get(): Quiz
@@ -75,9 +73,11 @@ class QuizRepository
             ->from(Question::class, 'q')
             ->join('q.answers', 'a')
             ->where($qb->expr()->in('q.id', ':ids'))
-            ->setParameters(new ArrayCollection([
-                new Parameter('ids', $ids)
-            ]))
+            ->setParameters(
+                new ArrayCollection([
+                    new Parameter('ids', $ids)
+                ])
+            )
             ->getQuery();
 
         /** @var Question[] $result */

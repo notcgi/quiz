@@ -30,7 +30,10 @@ final class ObjectSerializer extends Serializer
             $camelCaseToSnakeCaseNameConverter = null;
         }
 
-        $metadataAwareNameConverter = new MetadataAwareNameConverter($classMetadataFactory, $camelCaseToSnakeCaseNameConverter);
+        $metadataAwareNameConverter = new MetadataAwareNameConverter(
+            $classMetadataFactory,
+            $camelCaseToSnakeCaseNameConverter
+        );
 
         $encoders = [new JsonEncoder()];
         $extractors = new PropertyInfoExtractor(

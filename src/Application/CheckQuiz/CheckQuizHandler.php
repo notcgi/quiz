@@ -11,8 +11,7 @@ class CheckQuizHandler
 {
     public function __construct(
         private readonly QuizRepository $quizRepository,
-    )
-    {
+    ) {
     }
 
     public function __invoke(UserQuizDto $userQuizDto): QuizResultDto
@@ -32,23 +31,6 @@ class CheckQuizHandler
         }
 
         return new QuizResultDto($results);
-    }
-
-    private function isCorrect(UserQuestionDto $userQuestion, array $correctAnswerIds): bool
-    {
-        $userAnswers = array_map(
-            static fn($answer) => $answer->id,
-            $userQuestion->answers);
-
-        // user did not answer
-        if (count($correctAnswerIds) > 0 && count($userAnswers) === 0)
-        {
-            return false;
-        }
-
-        $intersection = array_intersect($userAnswers, $correctAnswerIds);
-
-        return count($intersection) >= count($userAnswers);
     }
 
     private function getQuestionIds(UserQuizDto $userQuizDto)
@@ -72,5 +54,22 @@ class CheckQuizHandler
         }
 
         return $correctAnswers;
+    }
+
+    private function isCorrect(UserQuestionDto $userQuestion, array $correctAnswerIds): bool
+    {
+        $userAnswers = array_map(
+            static fn($answer) => $answer->id,
+            $userQuestion->answers
+        );
+
+        // user did not answer
+        if (count($correctAnswerIds) > 0 && count($userAnswers) === 0) {
+            return false;
+        }
+
+        $intersection = array_intersect($userAnswers, $correctAnswerIds);
+
+        return count($intersection) >= count($userAnswers);
     }
 }
